@@ -35,37 +35,35 @@ jobs:
         with:
           targets: ${{ matrix.target }}
 
-      - name: Install Cross (nur für Unix)
+      - name: Install Cross (Unix)
         if: matrix.os != 'windows-latest'
         uses: taiki-e/install-action@v2
         with:
           tool: cross
 
-      # --- Build-Sektion pro Betriebssystem ---
-      - name: Build (Linux/macOS)
-        if: matrix.os != 'windows-latest'
-        run: cross build --release --target ${{ matrix.target }}
+      - name: Build
+        shell: bash
+        run: |
+          if [ "${{ matrix.os }}" == "windows-latest" ]; then
+            cargo build --release --target ${{ matrix.target }}
+          else
+            cross build --release --target ${{ matrix.target }}
+          fi
 
-      - name: Build (Windows)
-        if: matrix.os == 'windows-latest'
-        run: cargo build --release --target ${{ matrix.target }}
-
-      # --- Artifact-Vorbereitung pro Betriebssystem ---
-      - name: Prepare Artifact (Unix)
-        if: matrix.os != 'windows-latest'
+      - name: Prepare Artifact
         shell: bash
         run: |
           mkdir -p dist
-          # Binärdatei liegt bei cross meist in target/<target>/release/ipmc
-          cp target/${{ matrix.target }}/release/ipmc dist/ipmc-${{ matrix.target }}
-
-      - name: Prepare Artifact (Windows)
-        if: matrix.os == 'windows-latest'
-        shell: bash
-        run: |
-          mkdir -p dist
-          # Unter Windows heißt sie ipmc.exe
-          cp target/${{ matrix.target }}/release/ipmc.exe dist/ipmc-${{ matrix.target }}.exe
+          BIN_EXT=""
+          if [[ "${{ matrix.target }}" == *"windows"* ]]; then BIN_EXT=".exe"; fi
+          
+          # Da du das --target Flag nutzt, liegt die Datei immer hier:
+          # target/<target>/release/ipmc
+          SRC="target/${{ matrix.target }}/release/ipmc${BIN_EXT}"
+          DST="dist/ipmc-${{ matrix.target }}${BIN_EXT}"
+          
+          echo "Kopiere $SRC nach $DST"
+          cp "$SRC" "$DST"
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
