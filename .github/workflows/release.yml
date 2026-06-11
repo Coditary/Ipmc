@@ -35,30 +35,30 @@ jobs:
         with:
           targets: ${{ matrix.target }}
 
-      # Cross-Compilation Unterstützung für Linux aarch64
       - name: Install Cross
-        if: matrix.target == 'aarch64-unknown-linux-gnu'
+        if: matrix.os != 'windows-latest'
         uses: taiki-e/install-action@v2
         with:
           tool: cross
 
       - name: Build
-        # Nutzt 'cross', falls vorhanden, sonst 'cargo'
         run: |
-          if [ "${{ matrix.target }}" == "aarch64-unknown-linux-gnu" ]; then
-            cross build --release --target ${{ matrix.target }}
-          else
+          if [ "${{ matrix.os }}" == "windows-latest" ]; then
             cargo build --release --target ${{ matrix.target }}
+          else
+            cross build --release --target ${{ matrix.target }}
           fi
 
       - name: Prepare Artifact
         shell: bash
         run: |
-          # Benenne die Binärdatei einheitlich um
           mkdir -p dist
           BIN_EXT=""
           if [[ "${{ matrix.target }}" == *"windows"* ]]; then BIN_EXT=".exe"; fi
-          cp target/${{ matrix.target }}/release/ipmc${BIN_EXT} dist/ipmc-${{ matrix.target }}${BIN_EXT}
+          
+          # Wir nutzen 'find', um die Binärdatei sicher im target-Ordner zu lokalisieren
+          # Dies verhindert Fehler bei unterschiedlichen Pfad-Strukturen
+          cp $(find target/${{ matrix.target }}/release/ -maxdepth 1 -executable -type f -name "ipmc${BIN_EXT}") dist/ipmc-${{ matrix.target }}${BIN_EXT}
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
