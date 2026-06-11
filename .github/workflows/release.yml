@@ -56,9 +56,17 @@ jobs:
           BIN_EXT=""
           if [[ "${{ matrix.target }}" == *"windows"* ]]; then BIN_EXT=".exe"; fi
           
-          # Wir nutzen 'find', um die Binärdatei sicher im target-Ordner zu lokalisieren
-          # Dies verhindert Fehler bei unterschiedlichen Pfad-Strukturen
-          cp $(find target/${{ matrix.target }}/release/ -maxdepth 1 -executable -type f -name "ipmc${BIN_EXT}") dist/ipmc-${{ matrix.target }}${BIN_EXT}
+          # Suche die Datei und speichere den Pfad in einer Variable
+          # Wir suchen erst im target-Ordner, falls das fehlschlägt, suchen wir im ganzen Verzeichnis
+          FILE=$(find . -name "ipmc${BIN_EXT}" -executable -type f | grep "target" | head -n 1)
+          
+          if [ -z "$FILE" ]; then
+            echo "Fehler: Binärdatei ipmc${BIN_EXT} wurde nicht gefunden!"
+            exit 1
+          fi
+          
+          echo "Kopiere $FILE nach dist/ipmc-${{ matrix.target }}${BIN_EXT}"
+          cp "$FILE" "dist/ipmc-${{ matrix.target }}${BIN_EXT}"
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
