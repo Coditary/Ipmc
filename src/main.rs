@@ -8,34 +8,26 @@ use std::fs;
 use std::path::Path;
 use std::process::Command;
 
-/// Ein CLI-Tool, um Impact Maps als Code (KDL) in Graphen zu übersetzen
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
 struct Cli {
-    /// Pfad zur KDL-Eingabedatei
     input: String,
 
-    /// Spezifische Goal-ID, die generiert werden soll (z. B. GOAL-02)
     #[arg(short, long)]
     goal: Option<String>,
 
-    /// Zielverzeichnis (Standard) ODER spezifischer Dateiname (wenn -g genutzt wird)
     #[arg(short, long, default_value = ".")]
     out: String,
 
-    /// Ausgabeformat der Datei
     #[arg(short, long, value_enum, default_value_t = Format::Svg)]
     format: Format,
 
-    /// Die generierte .dot Zwischendatei behalten
     #[arg(long)]
     keep_dot: bool,
 
-    /// Generierte Map nach Abschluss automatisch öffnen
     #[arg(long)]
     open: bool,
 
-    /// Ausführliches Logging aktivieren
     #[arg(short, long)]
     verbose: bool,
 }
@@ -58,24 +50,21 @@ impl Format {
 }
 
 fn main() -> Result<()> {
-    // 1. Argumente parsen
     let cli = Cli::parse();
 
     if cli.verbose {
-        println!("🔍 Lese Datei: {}", cli.input);
+        println!("Reading file: {}", cli.input);
     }
 
-    // 2. KDL einlesen & parsen
     let kdl_content = fs::read_to_string(&cli.input)
-        .unwrap_or_else(|_| panic!("❌ FEHLER: Konnte '{}' nicht finden!", cli.input));
+        .unwrap_or_else(|_| panic!("ERROR: Could not find '{}'!", cli.input));
     
     let all_goals = parser::parse_kdl(&kdl_content)?;
 
-    // 3. Nach Goal filtern (falls -g übergeben wurde)
     let goals_to_process: Vec<_> = if let Some(target_goal) = &cli.goal {
         let filtered: Vec<_> = all_goals.into_iter().filter(|g| g.id == *target_goal).collect();
         if filtered.is_empty() {
-            println!("❌ Goal '{}' nicht in der KDL-Datei gefunden!", target_goal);
+            println!("ERROR: Goal '{}' not found in the KDL file!", target_goal);
             return Ok(());
         }
         filtered
@@ -83,14 +72,11 @@ fn main() -> Result<()> {
         all_goals
     };
 
-    // 4. Maps generieren
     for goal in goals_to_process {
         if cli.verbose {
-            println!("⚙️ Generiere Mindmap für Goal: {}", goal.id);
+            println!("Generating mindmap for goal: {}", goal.id);
         }
 
-        // Namenslogik: Wenn -g und -o gesetzt sind, ist -o der exakte Dateiname ohne Endung.
-        // Andernfalls ist -o das Zielverzeichnis und die Goal-ID der Dateiname.
         let base_path = if cli.goal.is_some() && cli.out != "." {
             cli.out.clone()
         } else {
@@ -105,11 +91,9 @@ fn main() -> Result<()> {
         let ext = cli.format.extension();
         let target_filename = format!("{}.{}", base_path, ext);
 
-        // DOT erzeugen
         let dot_string = graphviz::generate_dot(&goal);
         fs::write(&dot_filename, &dot_string)?;
 
-        // Wenn das Ziel NICHT raw DOT ist, kompilieren wir mit Graphviz
         if cli.format != Format::Dot {
             let output = Command::new("dot")
                 .arg(format!("-T{}", ext))
@@ -120,27 +104,25 @@ fn main() -> Result<()> {
 
             match output {
                 Ok(out) if out.status.success() => {
-                    println!("✨ Erfolgreich generiert: {}", target_filename);
+                    println!("Successfully generated: {}", target_filename);
                     if !cli.keep_dot {
-                        let _ = fs::remove_file(&dot_filename); // Räumt den .dot Code auf
+                        let _ = fs::remove_file(&dot_filename);
                     }
                 }
                 Ok(out) => {
-                    // Graphviz lief, aber ist mit einem Fehler abgestürzt
                     let err_msg = String::from_utf8_lossy(&out.stderr);
-                    println!("❌ Graphviz Syntax-Fehler beim Kompilieren:\n{}", err_msg);
-                    println!("💡 Tipp: Führe das Tool mit --keep-dot aus, um dir die defekte .dot Datei anzusehen.");
+                    println!("Graphviz syntax error during compilation:\n{}", err_msg);
+                    println!("Tip: Run the tool with --keep-dot to inspect the broken .dot file.");
                 }
-                Err(e) => println!("❌ Konnte den Graphviz-Compiler ('dot') nicht starten: {}", e),
+                Err(e) => println!("Could not start Graphviz compiler ('dot'): {}", e),
             }
         } else {
-            println!("✨ Erfolgreich generiert: {}", target_filename);
+            println!("Successfully generated: {}", target_filename);
         }
 
-        // 5. Öffnen (falls Flag gesetzt)
         if cli.open {
             if cli.verbose {
-                println!("📂 Öffne Datei...");
+                println!("Opening file...");
             }
             let _ = open::that(&target_filename);
         }
