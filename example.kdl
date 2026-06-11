@@ -1,22 +1,28 @@
-goal "Umsatz +40% bei guten Steam-Reviews in Q3/Q4" id="GOAL-02" {
-    metric "mrr_growth" target="+40%" desc="Monatlicher Bruttoumsatz"
-    metric "steam_rating" target=">=85%" desc="Positive Steam Reviews (Guardrail)"
-    metric "player_retention" target=">=25%" desc="30-Tage-Spielerbindung"
+goal "Verdopplung der aktiven Spielerbasis (MAU) zum DLC-Launch in Q4" id="GOAL-03" {
+    metric "mau_growth" target="+100%" desc="Monthly Active Users vor/beim Launch"
+    metric "d7_retention" target=">=40%" desc="7-Tage-Spielerbindung von Rückkehrern & Newbies"
+    metric "dlc_conversion" target=">=15%" desc="Kaufquote des neuen DLCs unter aktiven Spielern"
 
-    actor "Whale" id="whale" prio=1 {
-        impact "Gibt Geld für prestigeträchtige Items aus" id="IP-3" targets="mrr_growth" prio=1 sp=13 {
-            deliverable "Limitierte animierte Skill-Effekte" id="DEL-201" prio=1 sp=5
-            deliverable "Gilden-Statue im Social Hub" id="DEL-202" prio=2 sp=8
+    actor "Lapsed Player (Inaktive Veteranen)" id="ACT-301" prio=1 {
+        impact "Kehrt für das neue Endgame-System vorzeitig ins Spiel zurück" id="IP-301" targets="mau_growth" prio=1 sp=21 {
+            deliverable "In-Game 'Catch-Up' Mechanik für Ausrüstung & Level" id="DEL-301" prio=1 sp=8
+            deliverable "Teaser-Event 'Die Vorboten' mit exklusiven Pre-Launch-Belohnungen" id="DEL-302" prio=2 sp=13
+        }
+        impact "Reaktiviert den eigenen Clan/Freundeskreis" id="IP-302" targets="mau_growth" prio=2 sp=8 {
+            deliverable "Veteranen-werben-Freunde Belohnungssystem (Referral-Programm)" id="DEL-303" prio=1 sp=8
         }
     }
 
-    actor "Grinder" id="grinder" prio=2 {
-        impact "Schreibt positive Steam-Reviews" id="IP-1" targets="steam_rating" prio=1 sp=3 {
-            deliverable "Kosmetik-Skins sind zu 100% direkt kaufbar" id="DEL-204" prio=1 sp=3
+    actor "Twitch / YouTube Creator" id="ACT-302" prio=2 {
+        impact "Generiert Hype und organische Reichweite zum Pre-Patch" id="IP-303" targets="mau_growth" prio=1 sp=13 {
+            deliverable "Observer-Modus & Twitch-Drops-Integration für Streamer" id="DEL-304" prio=1 sp=5
+            deliverable "Early-Access-Testserver (PTR) exklusiv für Content Creator" id="DEL-305" prio=2 sp=8
         }
-        impact "Spielt täglich für den Season Pass" id="IP-2" targets="player_retention" prio=2 sp=21 {
-            deliverable "Tägliche Quests mit Modifikatoren" id="DEL-206" prio=1 sp=13
-            deliverable "Wöchentliche Leaderboard-Belohnungen" id="DEL-207" prio=2 sp=8
+    }
+
+    actor "Newbie (Neuspieler durch Hype)" id="ACT-303" prio=3 {
+        impact "Übersteigt die erste Frusthürde im Early-Game" id="IP-304" targets="d7_retention" prio=1 sp=13 {
+            deliverable "Überarbeitetes Tutorial (Skips für Veteranen, Fokus auf Core Loop)" id="DEL-306" prio=1 sp=13
         }
     }
 }
