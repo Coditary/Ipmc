@@ -1,0 +1,22 @@
+goal "Umsatz +40% bei guten Steam-Reviews in Q3/Q4" id="GOAL-02" {
+    metric "mrr_growth" target="+40%" desc="Monatlicher Bruttoumsatz"
+    metric "steam_rating" target=">=85%" desc="Positive Steam Reviews (Guardrail)"
+    metric "player_retention" target=">=25%" desc="30-Tage-Spielerbindung"
+
+    actor "Whale" id="whale" prio=1 {
+        impact "Gibt Geld für prestigeträchtige Items aus" id="IP-3" targets="mrr_growth" prio=1 sp=13 {
+            deliverable "Limitierte animierte Skill-Effekte" id="DEL-201" prio=1 sp=5
+            deliverable "Gilden-Statue im Social Hub" id="DEL-202" prio=2 sp=8
+        }
+    }
+
+    actor "Grinder" id="grinder" prio=2 {
+        impact "Schreibt positive Steam-Reviews" id="IP-1" targets="steam_rating" prio=1 sp=3 {
+            deliverable "Kosmetik-Skins sind zu 100% direkt kaufbar" id="DEL-204" prio=1 sp=3
+        }
+        impact "Spielt täglich für den Season Pass" id="IP-2" targets="player_retention" prio=2 sp=21 {
+            deliverable "Tägliche Quests mit Modifikatoren" id="DEL-206" prio=1 sp=13
+            deliverable "Wöchentliche Leaderboard-Belohnungen" id="DEL-207" prio=2 sp=8
+        }
+    }
+}
